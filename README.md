@@ -32,6 +32,19 @@
 
 **两者结合：在 DeepSeek TUI 里说"帮我在浏览器里完成 X"，它自动操控浏览器执行。**
 
+### 🧩 扩展能力 (MCP Servers)
+
+通过 MCP 协议集成的额外能力：
+
+| 能力 | 状态 | 提供者 |
+|------|:----:|--------|
+| 👁️ **图像分析 / OCR** — 看懂截图、识别文字 | ✅ | Vision MCP Server |
+| 📄 **PDF 处理** — 读取、搜索、表格提取 | ✅ | PDF MCP Server |
+| 📁 **文件系统增强** — 安全读写大文件 | ✅ | Filesystem MCP Server |
+| 🖥️ **浏览器操控** — 网页自动化 | ✅ | Page Agent MCP |
+
+详见 [MCP_SERVERS.md](MCP_SERVERS.md) 和 [WORK_MEMORY.md](WORK_MEMORY.md)
+
 ---
 
 ## 📦 仓库结构

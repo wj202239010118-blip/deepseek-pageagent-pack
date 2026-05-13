@@ -1,0 +1,7 @@
+{
+  "baseUrl": "http://localhost:8000/v1/chat/completions",
+  "model": "Qwen3-VL-32B",
+  "apiKey": "",
+  "maxTokens": 4096,
+  "temperature": 0.7
+}

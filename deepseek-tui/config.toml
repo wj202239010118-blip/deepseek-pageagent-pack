@@ -163,3 +163,23 @@ cost_currency = "cny"
 # ─────────────────────────────────────────────────────────────────
 # [projects.'\\?\C:\Users\YOURNAME']
 # trust_level = "trusted"
+
+# ─────────────────────────────────────────────────────────────────
+# MCP Servers — Extended Capabilities
+# See MCP_SERVERS.md for full documentation
+# ─────────────────────────────────────────────────────────────────
+
+# 👁️ Vision — image analysis, OCR, video understanding
+[mcp_servers.vision]
+command = "node"
+args    = ["mcp-servers/vision-mcp-server/dist/index.js"]
+env     = { VISION_BASE_URL = "YOUR_VISION_API_ENDPOINT", VISION_MODEL = "gpt-4o", VISION_API_KEY = "YOUR_VISION_API_KEY" }
+
+# 📄 PDF — read, search, OCR, table extraction
+[mcp_servers.pdf]
+command = "pdf-mcp"
+
+# 📁 Filesystem — secure file operations
+# [mcp_servers.filesystem]
+# command = "npx"
+# args    = ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\YOURNAME"]

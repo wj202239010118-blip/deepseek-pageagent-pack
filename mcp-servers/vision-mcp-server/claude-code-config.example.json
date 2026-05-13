@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "vision": {
+      "command": "node",
+      "args": ["/path/to/vision-mcp-server/dist/index.js"],
+      "env": {
+        "VISION_BASE_URL": "http://your-server:port/v1/chat/completions",
+        "VISION_MODEL": "Qwen3-VL-32B",
+        "VISION_API_KEY": "",
+        "VISION_MAX_TOKENS": "4096",
+        "VISION_TEMPERATURE": "0.7"
+      }
+    }
+  }
+}
