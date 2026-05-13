@@ -1,0 +1,72 @@
+/* AI 光标样式 — 24px 与真实鼠标等比，热点对齐箭头尖端 */
+.cursor {
+	position: absolute;
+	width: var(--cursor-size, 24px);
+	height: var(--cursor-size, 24px);
+	pointer-events: none;
+	z-index: 10000;
+	/* Shift so the arrow tip (top-left of the rotated SVG) aligns with the click coordinate */
+	transform: translate(-3px, -2px);
+}
+
+.cursorBorder {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(45deg, rgb(57, 182, 255), rgb(189, 69, 251));
+	mask-image: url(./cursor-border.svg);
+	mask-size: 100% 100%;
+	mask-repeat: no-repeat;
+
+	transform-origin: center;
+	transform: rotate(-135deg) scale(1.2);
+	margin-left: -3px;
+	margin-top: -6px;
+}
+
+.cursorFilling {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background: url(./cursor-fill.svg);
+	background-size: 100% 100%;
+	background-repeat: no-repeat;
+
+	transform-origin: center;
+	transform: rotate(-135deg) scale(1.2);
+	margin-left: -3px;
+	margin-top: -6px;
+}
+
+.cursorRipple {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	margin-left: -50%;
+	margin-top: -50%;
+
+	&::after {
+		content: '';
+		opacity: 0;
+		position: absolute;
+		inset: 0;
+		border: 2px solid rgba(57, 182, 255, 1);
+		border-radius: 50%;
+	}
+}
+
+.cursor.clicking .cursorRipple::after {
+	animation: cursor-ripple 300ms ease-out forwards;
+}
+
+@keyframes cursor-ripple {
+	0% {
+		transform: scale(0);
+		opacity: 1;
+	}
+	100% {
+		transform: scale(2);
+		opacity: 0;
+	}
+}

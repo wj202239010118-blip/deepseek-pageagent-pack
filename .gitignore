@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+packages/*/dist/
+packages/*/.output/
+packages/page-agent/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env files (may contain keys)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Temp
+.trae/
+tmp/
+temp/
+
+# Extension builds
+packages/extension/dist/
+*.zip
+
+# Package locks (optional - include if you want reproducible builds)
+# package-lock.json

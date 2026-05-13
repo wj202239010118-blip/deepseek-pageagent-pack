@@ -1,0 +1,165 @@
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  DeepSeek TUI — Configuration Template                       ║
+# ║  Replace placeholders with your own credentials              ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+# ─────────────────────────────────────────────────────────────────
+# Provider & Model
+# ─────────────────────────────────────────────────────────────────
+provider            = "deepseek"
+api_key             = "YOUR_DEEPSEEK_API_KEY"
+base_url            = "https://api.deepseek.com/beta"
+default_text_model  = "deepseek-v4-pro"
+
+# Reasoning: "high" for daily use; Shift+Tab to switch "max" for hard problems
+reasoning_effort = "high"
+
+# UI language (zh-Hans / en / ja / ...)
+lang = "zh-Hans"
+
+# ─────────────────────────────────────────────────────────────────
+# Security & Approval — "Smart YOLO"
+# on-request = conservative  untrusted = auto-approve safe commands  never = full YOLO
+# ─────────────────────────────────────────────────────────────────
+allow_shell     = true
+approval_policy = "untrusted"
+sandbox_mode    = "workspace-write"
+
+# Auto-approved commands (prefix matching)
+auto_allow = [
+  # File reading
+  "cat", "head", "tail", "less", "bat",
+  "ls", "dir", "tree", "find", "stat", "wc", "file",
+  # Search
+  "grep", "rg", "ag", "fd",
+  # Git read-only
+  "git status", "git diff", "git log", "git show",
+  "git branch", "git remote", "git stash list", "git tag", "git describe",
+  # Tests & build checks
+  "cargo check", "cargo test", "cargo clippy", "cargo fmt --check",
+  "npm test", "npm run test", "npm run lint", "npm run typecheck",
+  "pnpm test", "pnpm run", "yarn test",
+  "pytest", "python -m pytest",
+  "go test", "go vet", "go build",
+  "make test", "make check",
+  # Formatters (safe writes)
+  "cargo fmt", "rustfmt", "prettier", "eslint --fix",
+  "black", "ruff check", "ruff format", "gofmt",
+  # System info
+  "pwd", "echo", "env", "which",
+  "node --version", "python --version", "cargo --version",
+  # Safe directory ops
+  "mkdir -p",
+]
+
+# ─────────────────────────────────────────────────────────────────
+# Sub-agents — parallel exploration
+# ─────────────────────────────────────────────────────────────────
+max_subagents = 20
+
+# ─────────────────────────────────────────────────────────────────
+# Context compression
+# ─────────────────────────────────────────────────────────────────
+[context]
+enabled               = true
+verbatim_window_turns = 20
+l1_threshold          = 200000   # 20%: soft summary
+l2_threshold          = 400000   # 40%: aggressive compression
+l3_threshold          = 600000   # 60%: seam + history trim
+cycle_threshold       = 800000   # 80%: hard reset
+seam_model            = "deepseek-v4-flash"
+
+# ─────────────────────────────────────────────────────────────────
+# Sub-agents concurrency limit
+# ─────────────────────────────────────────────────────────────────
+[subagents]
+max_concurrent = 8
+
+# ─────────────────────────────────────────────────────────────────
+# Retry & network recovery
+# ─────────────────────────────────────────────────────────────────
+[retry]
+enabled          = true
+max_retries      = 6
+initial_delay    = 2.0
+max_delay        = 60.0
+exponential_base = 2.0
+
+# ─────────────────────────────────────────────────────────────────
+# Notifications & thinking time display
+# ─────────────────────────────────────────────────────────────────
+[notifications]
+method          = "auto"
+threshold_secs  = 0
+include_summary = true
+
+# ─────────────────────────────────────────────────────────────────
+# TUI Interface
+# ─────────────────────────────────────────────────────────────────
+[tui]
+alternate_screen      = "auto"
+mouse_capture         = true
+osc8_links            = true
+notification_condition = "always"
+
+# ─────────────────────────────────────────────────────────────────
+# Hooks
+# ─────────────────────────────────────────────────────────────────
+[hooks]
+enabled             = true
+default_timeout_secs = 10
+
+[[hooks.hooks]]
+event   = "on_error"
+command = "echo \"\n⚠️  [DeepSeek] Error! Possible causes: network / API timeout / invalid key\n   → Check network and press R to retry, or /provider openrouter to switch\n\""
+
+[[hooks.hooks]]
+event   = "session_start"
+command = "echo \"✅ DeepSeek TUI started | Model: deepseek-v4-pro | Reasoning: high\""
+
+[[hooks.hooks]]
+event   = "session_end"
+command = "echo \"👋 Session ended | Use deepseek resume to restore\""
+
+# ─────────────────────────────────────────────────────────────────
+# Feature toggles
+# ─────────────────────────────────────────────────────────────────
+[features]
+shell_tool  = true
+subagents   = true
+web_search  = true
+apply_patch = true
+mcp         = true
+exec_policy = true
+
+# ─────────────────────────────────────────────────────────────────
+# User memory — cross-session persistent context
+# ─────────────────────────────────────────────────────────────────
+[memory]
+enabled     = true
+memory_path = "~/.deepseek/memory.md"
+
+# ─────────────────────────────────────────────────────────────────
+# Cost display
+# ─────────────────────────────────────────────────────────────────
+cost_currency = "cny"
+
+# ─────────────────────────────────────────────────────────────────
+# Alternative providers (uncomment and fill keys when needed)
+# Switch with: /provider openrouter
+# ─────────────────────────────────────────────────────────────────
+[providers.openrouter]
+# api_key  = "YOUR_OPENROUTER_API_KEY"
+# base_url = "https://openrouter.ai/api/v1"
+# model    = "deepseek/deepseek-chat-v3-0324"
+
+[providers.nvidia_nim]
+# api_key  = "YOUR_NVIDIA_API_KEY"
+# base_url = "https://integrate.api.nvidia.com/v1"
+# default_text_model = "deepseek-ai/deepseek-v4-pro"
+
+# ─────────────────────────────────────────────────────────────────
+# Project trust levels (auto-written by TUI, keep)
+# ─────────────────────────────────────────────────────────────────
+# [projects.'\\?\C:\Users\YOURNAME']
+# trust_level = "trusted"

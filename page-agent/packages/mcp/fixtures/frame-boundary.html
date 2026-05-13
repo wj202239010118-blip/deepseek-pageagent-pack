@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Frame Boundary Fixture</title>
+		<style>
+			:root {
+				color-scheme: dark;
+			}
+			body {
+				margin: 0;
+				font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+				background: #0b0b0f;
+				color: #e5e5e5;
+				height: 100vh;
+				overflow: hidden;
+			}
+			#canvas {
+				position: relative;
+				width: 100vw;
+				height: 100vh;
+				background: radial-gradient(1200px 600px at 30% 20%, rgba(99, 102, 241, 0.18), transparent 60%),
+					radial-gradient(900px 500px at 80% 70%, rgba(34, 211, 238, 0.12), transparent 55%),
+					#0b0b0f;
+			}
+			#panel {
+				position: absolute;
+				left: 16px;
+				top: 16px;
+				width: 320px;
+				background: rgba(24, 24, 27, 0.7);
+				backdrop-filter: blur(10px);
+				border: 1px solid rgba(39, 39, 42, 0.9);
+				border-radius: 12px;
+				padding: 12px;
+				box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+				z-index: 10;
+			}
+			.row {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				margin-top: 8px;
+			}
+			label {
+				font-size: 12px;
+				color: #a1a1aa;
+			}
+			input[type='text'] {
+				flex: 1;
+				height: 30px;
+				border-radius: 8px;
+				border: 1px solid rgba(63, 63, 70, 0.9);
+				background: rgba(9, 9, 11, 0.7);
+				color: #e5e5e5;
+				padding: 0 10px;
+				font-size: 12px;
+				outline: none;
+			}
+			button {
+				height: 30px;
+				border-radius: 8px;
+				border: 1px solid rgba(63, 63, 70, 0.9);
+				background: rgba(39, 39, 42, 0.7);
+				color: #e5e5e5;
+				padding: 0 10px;
+				font-size: 12px;
+				cursor: pointer;
+			}
+			button:hover {
+				background: rgba(63, 63, 70, 0.7);
+			}
+			#status {
+				margin-top: 10px;
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				font-size: 11px;
+				color: #a1a1aa;
+				white-space: pre-wrap;
+				word-break: break-word;
+				border-top: 1px solid rgba(39, 39, 42, 0.9);
+				padding-top: 10px;
+			}
+			#frame {
+				position: absolute;
+				left: 520px;
+				top: 240px;
+				width: 420px;
+				height: 260px;
+				border-radius: 14px;
+				border: 2px dashed rgba(99, 102, 241, 0.8);
+				background: rgba(99, 102, 241, 0.08);
+				box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+				user-select: none;
+			}
+			#frameHeader {
+				position: absolute;
+				left: 10px;
+				top: 10px;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				font-size: 12px;
+				color: #e4e4ff;
+			}
+			#lockBadge {
+				display: none;
+				font-size: 11px;
+				padding: 2px 6px;
+				border-radius: 999px;
+				border: 1px solid rgba(244, 63, 94, 0.4);
+				background: rgba(244, 63, 94, 0.12);
+				color: rgba(244, 63, 94, 0.95);
+			}
+			.locked #lockBadge {
+				display: inline-flex;
+			}
+			.locked {
+				border-color: rgba(244, 63, 94, 0.7);
+				background: rgba(244, 63, 94, 0.06);
+			}
+			#hint {
+				position: absolute;
+				left: 10px;
+				bottom: 10px;
+				font-size: 11px;
+				color: rgba(161, 161, 170, 0.9);
+			}
+		</style>
+	</head>
+	<body>
+		<div id="canvas">
+			<div id="panel">
+				<div class="row">
+					<label for="nameInput">Name</label>
+					<input id="nameInput" type="text" value="AI boundary" />
+					<button id="applyName">Apply</button>
+				</div>
+				<div class="row">
+					<label for="lockToggle">Locked</label>
+					<input id="lockToggle" type="checkbox" />
+					<button id="resetPos">Reset</button>
+				</div>
+				<div id="status"></div>
+			</div>
+
+			<div id="frame" role="application" aria-label="frame boundary">
+				<div id="frameHeader">
+					<span id="frameName">AI boundary</span>
+					<span id="lockBadge">LOCKED</span>
+				</div>
+				<div id="hint">Drag anywhere inside this frame</div>
+			</div>
+		</div>
+
+		<script>
+			(() => {
+				const frame = document.getElementById('frame')
+				const nameInput = document.getElementById('nameInput')
+				const applyName = document.getElementById('applyName')
+				const lockToggle = document.getElementById('lockToggle')
+				const resetPos = document.getElementById('resetPos')
+				const status = document.getElementById('status')
+				const frameName = document.getElementById('frameName')
+
+				let locked = false
+				let dragging = false
+				let start = { x: 0, y: 0 }
+				let origin = { left: 520, top: 240 }
+
+				function setFramePos(left, top) {
+					const rect = frame.getBoundingClientRect()
+					const maxLeft = Math.max(0, window.innerWidth - rect.width)
+					const maxTop = Math.max(0, window.innerHeight - rect.height)
+					const nextLeft = Math.min(maxLeft, Math.max(0, left))
+					const nextTop = Math.min(maxTop, Math.max(0, top))
+					frame.style.left = nextLeft + 'px'
+					frame.style.top = nextTop + 'px'
+				}
+
+				function readFramePos() {
+					const left = parseFloat(frame.style.left || '0')
+					const top = parseFloat(frame.style.top || '0')
+					return { left, top }
+				}
+
+				function updateStatus(extra) {
+					const pos = readFramePos()
+					const rect = frame.getBoundingClientRect()
+					const payload = {
+						frameLeft: Math.round(pos.left),
+						frameTop: Math.round(pos.top),
+						frameX: Math.round(rect.left),
+						frameY: Math.round(rect.top),
+						frameWidth: Math.round(rect.width),
+						frameHeight: Math.round(rect.height),
+						viewportWidth: window.innerWidth,
+						viewportHeight: window.innerHeight,
+						name: frameName.textContent || '',
+						locked,
+						...(extra || {}),
+					}
+					status.textContent = JSON.stringify(payload, null, 2)
+					document.documentElement.dataset.status = status.textContent
+				}
+
+				function applyNameFromInput() {
+					frameName.textContent = nameInput.value.trim() || 'Untitled'
+					updateStatus({ event: 'rename' })
+				}
+
+				applyName.addEventListener('click', () => applyNameFromInput())
+				nameInput.addEventListener('keydown', (e) => {
+					if (e.key === 'Enter') applyNameFromInput()
+				})
+
+				lockToggle.addEventListener('change', () => {
+					locked = Boolean(lockToggle.checked)
+					frame.classList.toggle('locked', locked)
+					updateStatus({ event: 'lock' })
+				})
+
+				resetPos.addEventListener('click', () => {
+					origin = { left: 520, top: 240 }
+					setFramePos(origin.left, origin.top)
+					updateStatus({ event: 'reset' })
+				})
+
+				function handleDragStart(target, clientX, clientY) {
+					if (locked) return
+					if (!(target instanceof HTMLElement)) return
+					if (!frame.contains(target)) return
+					dragging = true
+					start = { x: clientX, y: clientY }
+					const pos = readFramePos()
+					origin = { left: pos.left, top: pos.top }
+					updateStatus({ event: 'dragStart' })
+				}
+
+				function handleDragMove(clientX, clientY) {
+					if (!dragging) return
+					const dx = clientX - start.x
+					const dy = clientY - start.y
+					setFramePos(origin.left + dx, origin.top + dy)
+					updateStatus({ event: 'dragMove' })
+				}
+
+				function handleDragEnd() {
+					if (!dragging) return
+					dragging = false
+					updateStatus({ event: 'dragEnd' })
+				}
+
+				document.addEventListener('pointerdown', (e) => handleDragStart(e.target, e.clientX, e.clientY))
+				document.addEventListener('pointermove', (e) => handleDragMove(e.clientX, e.clientY))
+				document.addEventListener('pointerup', () => handleDragEnd())
+
+				document.addEventListener('mousedown', (e) => {
+					if (e.button !== 0) return
+					handleDragStart(e.target, e.clientX, e.clientY)
+				})
+				document.addEventListener('mousemove', (e) => handleDragMove(e.clientX, e.clientY))
+				document.addEventListener('mouseup', (e) => {
+					if (e.button !== 0) return
+					handleDragEnd()
+				})
+
+				updateStatus({ event: 'init' })
+			})()
+		</script>
+	</body>
+</html>

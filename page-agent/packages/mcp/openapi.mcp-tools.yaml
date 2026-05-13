@@ -1,0 +1,158 @@
+openapi: 3.0.3
+info:
+  title: Page Agent MCP Tools (Spec)
+  version: 0.1.0
+  description: >
+    This document describes MCP stdio tools as an OpenAPI-style contract for inputs/outputs.
+    It does NOT imply an HTTP server exists.
+servers: []
+paths:
+  /tools/browser_press_key:
+    post:
+      summary: Press a keyboard key
+      description: >
+        Dispatches keydown/keyup (and optional keypress) on the active element.
+        Can focus a target element by index first.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrowserPressKeyInput'
+      responses:
+        '200':
+          description: Tool result (text)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolTextResult'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolErrorResult'
+        '403':
+          description: Not allowed (origin policy / password policy / disallowed key combo)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolErrorResult'
+  /tools/browser_drag:
+    post:
+      summary: Drag pointer
+      description: >
+        Dispatches pointer/mouse events to simulate a drag from start to end.
+        Coordinates support absolute pixels {x,y} or viewport percentages {xPct,yPct}.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrowserDragInput'
+      responses:
+        '200':
+          description: Tool result (text)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolTextResult'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolErrorResult'
+        '403':
+          description: Not allowed (origin policy)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolErrorResult'
+components:
+  schemas:
+    KeyModifiers:
+      type: object
+      additionalProperties: false
+      properties:
+        alt: { type: boolean }
+        ctrl: { type: boolean }
+        meta: { type: boolean }
+        shift: { type: boolean }
+    BrowserPressKeyInput:
+      type: object
+      additionalProperties: false
+      required: [key]
+      properties:
+        key:
+          type: string
+          minLength: 1
+          description: KeyboardEvent.key (e.g. Enter, Escape, a)
+        code:
+          type: string
+          description: KeyboardEvent.code (optional)
+        index:
+          type: integer
+          minimum: 1
+          description: Optional element index to focus before pressing
+        modifiers:
+          $ref: '#/components/schemas/KeyModifiers'
+    Point:
+      type: object
+      additionalProperties: false
+      required: [x, y]
+      properties:
+        x: { type: number }
+        y: { type: number }
+    PointPct:
+      type: object
+      additionalProperties: false
+      required: [xPct, yPct]
+      properties:
+        xPct: { type: number }
+        yPct: { type: number }
+    BrowserDragInput:
+      type: object
+      additionalProperties: false
+      required: [start, end]
+      properties:
+        start:
+          oneOf:
+            - $ref: '#/components/schemas/Point'
+            - $ref: '#/components/schemas/PointPct'
+        end:
+          oneOf:
+            - $ref: '#/components/schemas/Point'
+            - $ref: '#/components/schemas/PointPct'
+        steps:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 12
+    ToolTextResult:
+      type: object
+      description: MCP tool result envelope (simplified)
+      properties:
+        content:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string, enum: [text] }
+              text: { type: string }
+    ToolErrorResult:
+      type: object
+      description: MCP tool error envelope (simplified)
+      properties:
+        isError: { type: boolean }
+        content:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string, enum: [text] }
+              text:
+                type: string
+                description: >
+                  Error message. Expected error categories:
+                  NOT_ALLOWED_ORIGIN, DENIED_UNTIL, DISALLOWED_KEY_COMBO, PASSWORD_FIELD_DENIED, INVALID_PARAMS, TIMEOUT.
