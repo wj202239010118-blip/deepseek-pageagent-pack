@@ -456,7 +456,7 @@ async function run(binaryName) {
 
   if (isBareTui || isBareCli) {
     const mode = getMode();
-    const tuiBinary = path.join(path.dirname(binaryPath), "deepseek.exe");
+    const tuiBinary = path.join(path.dirname(binaryPath), "deepseek-tui.exe");
     const pythonCmd = process.platform === "win32" ? "python" : "python3";
 
     while (true) {

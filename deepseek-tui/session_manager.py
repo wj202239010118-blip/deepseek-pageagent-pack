@@ -300,11 +300,15 @@ class SessionItem(ListItem):
             yield Label(f"{self.count} msgs · {self.updated}", classes="meta")
 
     def on_mouse_down(self, event) -> None:
-        """Right-click -> show context menu."""
+        """Right-click -> show context menu. Left double-click -> resume."""
+        app = self.app
         if event.button == 3:  # right button
-            app = self.app
             if hasattr(app, 'show_context_menu'):
                 app.show_context_menu(self.sid, self.pinned, event.screen_x, event.screen_y)
+        elif event.button == 1 and hasattr(app, 'action_resume_session'):  # left button
+            self.selected_sid = self.sid
+            app.selected_sid = self.sid
+            app.show_preview(self.sid)
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -444,6 +448,12 @@ class SessionManager(App):
 
         if paths_displayed:
             preview.write("[dim]--- messages ---[/]")
+
+        # Show "open" hint at the bottom
+        preview.write("")
+        preview.write("[dim]──────────────────────────────────────[/]")
+        preview.write("[bold]Press Enter to open this session[/]")
+        preview.write("[dim]or N for new session, Q to quit[/]")
 
         for m in msgs[:30]:
             role_label = "You" if m["role"] == "user" else "DeepSeek"
