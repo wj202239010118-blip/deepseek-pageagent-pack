@@ -1,0 +1,7 @@
+{
+  "baseUrl": "https://api.deepseek.com/beta/chat/completions",
+  "model": "deepseek-v4-pro",
+  "apiKey": "sk-55c1dbef3db64de5ad410dd1ed1d64ce",
+  "maxTokens": 4096,
+  "temperature": 0.7
+}

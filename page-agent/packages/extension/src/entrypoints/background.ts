@@ -12,9 +12,14 @@ export default defineBackground(() => {
 	// After extension reload: reopen Hub tab and re-inject content scripts.
 	// Chrome closes all extension pages and does NOT re-inject content scripts automatically.
 	chrome.runtime.onInstalled.addListener(async () => {
-		// 1. Reopen Hub tab using the last known WS port (fallback to default 38401)
-		const { hubWsPort } = await chrome.storage.local.get('hubWsPort')
-		await openOrFocusHubTab((hubWsPort as number | undefined) ?? 38401).catch(() => {})
+		// 1. Reopen Hub tabs for all previously active ports (fallback to default 38401)
+		const { hubWsPorts } = await chrome.storage.local.get('hubWsPorts')
+		const ports: number[] = Array.isArray(hubWsPorts) && hubWsPorts.length > 0
+			? hubWsPorts
+			: [38401]
+		for (const port of ports) {
+			await openOrFocusHubTab(port).catch(() => {})
+		}
 
 		// 2. Re-inject content script only into tabs in the currently focused window.
 		//    Injecting ALL windows causes stale instance accumulation and error floods.
@@ -102,19 +107,26 @@ export default defineBackground(() => {
 })
 
 async function openOrFocusHubTab(wsPort: number) {
-	// Persist port so onInstalled can reopen Hub after extension reload
-	await chrome.storage.local.set({ hubWsPort: wsPort })
+	// Persist all active ports so onInstalled can reopen them after extension reload
+	const { hubWsPorts } = await chrome.storage.local.get('hubWsPorts')
+	const ports: number[] = Array.isArray(hubWsPorts) ? hubWsPorts : []
+	if (!ports.includes(wsPort)) {
+		ports.push(wsPort)
+		await chrome.storage.local.set({ hubWsPorts: ports })
+	}
 
 	const hubUrl = chrome.runtime.getURL('hub.html')
-	const existing = await chrome.tabs.query({ url: `${hubUrl}*` })
+	const targetUrl = `${hubUrl}?ws=${wsPort}`
+
+	// Look for an existing hub tab for this specific port
+	const existing = await chrome.tabs.query({ url: targetUrl })
 
 	if (existing.length > 0 && existing[0].id) {
-		await chrome.tabs.update(existing[0].id, {
-			active: true,
-			url: `${hubUrl}?ws=${wsPort}`,
-		})
+		// Already open — just focus it
+		await chrome.tabs.update(existing[0].id, { active: true })
 		return
 	}
 
-	await chrome.tabs.create({ url: `${hubUrl}?ws=${wsPort}`, pinned: true })
+	// Create a new hub tab for this port
+	await chrome.tabs.create({ url: targetUrl, pinned: true })
 }

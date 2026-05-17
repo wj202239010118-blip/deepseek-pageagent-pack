@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import http from 'node:http'
+import { createServer } from 'node:net'
 import { fileURLToPath } from 'node:url'
 import { WebSocketServer } from 'ws'
 
@@ -12,6 +13,57 @@ const launcherTemplate = readFileSync(
 	fileURLToPath(new URL('./launcher.html', import.meta.url)),
 	'utf-8'
 )
+
+// ── Port resolution ──────────────────────────────────────────────────────────
+
+/**
+ * Probe a port by briefly binding a TCP server.
+ * Returns the resolved port (may differ from `preferred` if it was taken).
+ *
+ * Strategy:
+ *   1. Try `preferred`
+ *   2. If busy, try `preferred + 1 … preferred + maxTries`
+ *   3. If all taken, let the OS pick any free port
+ */
+export async function findFreePort(preferred, maxTries = 20) {
+	return new Promise((resolve, reject) => {
+		const attempt = (port) => {
+			const srv = createServer()
+			const cleanup = () => {
+				srv.removeAllListeners()
+				srv.close()
+			}
+			srv.on('error', (err) => {
+				cleanup()
+				if (err.code === 'EADDRINUSE' || err.code === 'EACCES') {
+					const next = port + 1
+					if (next < preferred + maxTries) {
+						attempt(next)
+					} else {
+						// Last resort — OS-assigned
+						const fallback = createServer()
+						fallback.on('error', reject)
+						fallback.listen(0, LOOPBACK_HOST, () => {
+							const p = fallback.address().port
+							fallback.close(() => resolve(p))
+						})
+					}
+				} else {
+					reject(err)
+				}
+			})
+			srv.on('listening', () => {
+				const p = srv.address().port
+				cleanup()
+				resolve(p)
+			})
+			srv.listen(port, LOOPBACK_HOST)
+		}
+		attempt(preferred)
+	})
+}
+
+// ── HubBridge ────────────────────────────────────────────────────────────────
 
 /**
  * HTTP + WebSocket bridge to the hub.html extension tab.
@@ -84,15 +136,13 @@ export class HubBridge {
 
 	/** @returns {Promise<void>} */
 	async start() {
+		// Ask the port-finder to pick a free port if `this.port` is busy
+		const resolved = await findFreePort(this.port)
+		this.port = resolved
+
 		return new Promise((resolve, reject) => {
 			this.#httpServer.on('error', (/** @type {NodeJS.ErrnoException} */ err) => {
-				if (err.code === 'EADDRINUSE') {
-					reject(
-						new Error(`Port ${this.port} is in use. Another Page Agent MCP server may be running.`)
-					)
-				} else {
-					reject(err)
-				}
+				reject(err)
 			})
 			this.#httpServer.listen(this.port, LOOPBACK_HOST, () => {
 				console.error(`[page-agent-mcp] HTTP + WS on http://${LOOPBACK_HOST}:${this.port}`)
@@ -167,7 +217,7 @@ export class HubBridge {
 		}
 
 		this.#hub = ws
-		console.error('[page-agent-mcp] Hub connected')
+		console.error(`[page-agent-mcp] Hub connected (port ${this.port})`)
 
 		ws.on('message', (/** @type {Buffer} */ rawData) => {
 			/** @type {{ type: string, success?: boolean, data?: string, message?: string }} */
@@ -200,7 +250,7 @@ export class HubBridge {
 		})
 
 		ws.on('close', () => {
-			console.error('[page-agent-mcp] Hub disconnected')
+			console.error(`[page-agent-mcp] Hub disconnected (port ${this.port})`)
 			if (this.#hub === ws) this.#hub = null
 			if (this.#pendingTask) {
 				this.#pendingTask.reject(new Error('Hub disconnected while task was running'))

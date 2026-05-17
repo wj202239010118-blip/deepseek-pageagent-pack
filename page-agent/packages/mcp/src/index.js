@@ -7,8 +7,37 @@ import * as z from 'zod/v4'
 
 import { HubBridge } from './hub-bridge.js'
 
+// ── CLI argument parsing ─────────────────────────────────────────────────────
+
+const args = process.argv.slice(2)
+let requestedPort = null
+let instanceName = 'default'
+
+for (let i = 0; i < args.length; i++) {
+	if (args[i] === '--port' || args[i] === '-p') {
+		requestedPort = parseInt(args[++i], 10)
+	} else if (args[i] === '--name' || args[i] === '-n') {
+		instanceName = args[++i]
+	} else if (args[i] === '--help' || args[i] === '-h') {
+		console.error(`Usage: page-agent-mcp [options]
+
+Options:
+  --port, -p <number>   HTTP/WS port (default: env PORT or 38401)
+  --name, -n <string>   Instance name for identification (default: "default")
+  --help, -h            Show this help
+
+Environment:
+  PORT                  Fallback port when --port is not specified
+  LLM_BASE_URL          Base URL for the LLM backend (execute_task only)
+  LLM_MODEL_NAME        Model name (default: deepseek-v4-pro)
+  LLM_API_KEY           API key for the LLM backend
+`)
+		process.exit(0)
+	}
+}
+
 const env = process.env
-const port = parseInt(env.PORT || '38401')
+const port = requestedPort || parseInt(env.PORT || '38401')
 
 /** @type {Record<string, string>} */
 const llmConfig = {}
@@ -21,8 +50,11 @@ if (env.LLM_API_KEY) llmConfig.apiKey = env.LLM_API_KEY
 const hub = new HubBridge(port)
 await hub.start()
 
+// Log the actual port after auto-resolution
+console.error(`[page-agent-mcp] Instance "${instanceName}" ready on port ${hub.port}`)
+
 // Open launcher in default browser
-const url = `http://localhost:${port}`
+const url = `http://localhost:${hub.port}`
 const cmd = platform() === 'darwin' ? 'open' : platform() === 'win32' ? 'start ""' : 'xdg-open'
 exec(`${cmd} "${url}"`, (err) => {
 	if (err) console.error(`[page-agent-mcp] Could not open browser: ${err.message}`)
@@ -30,7 +62,7 @@ exec(`${cmd} "${url}"`, (err) => {
 
 // --- MCP server (stdio) ---
 
-const mcpServer = new McpServer({ name: 'page-agent', version: '1.5.8' })
+const mcpServer = new McpServer({ name: `page-agent-${instanceName}`, version: '1.8.0' })
 
 mcpServer.registerTool(
 	'execute_task',
@@ -76,7 +108,16 @@ mcpServer.registerTool(
 		content: [
 			{
 				type: 'text',
-				text: JSON.stringify({ connected: hub.connected, busy: hub.busy }, null, 2),
+				text: JSON.stringify(
+					{
+						connected: hub.connected,
+						busy: hub.busy,
+						port: hub.port,
+						instance: instanceName,
+					},
+					null,
+					2
+				),
 			},
 		],
 	})
@@ -479,4 +520,4 @@ mcpServer.registerTool(
 
 const transport = new StdioServerTransport()
 await mcpServer.connect(transport)
-console.error('[page-agent-mcp] MCP server ready (stdio)')
+console.error(`[page-agent-mcp] MCP server ready (stdio) — instance "${instanceName}"`)
