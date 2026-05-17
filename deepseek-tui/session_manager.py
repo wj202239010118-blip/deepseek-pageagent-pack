@@ -57,6 +57,12 @@ SessionManager {
     border: none; min-height: 3;
 }
 #new-btn:hover { background: #30363d; }
+#open-btn {
+    width: 100%; margin: 0 0 1 0;
+    background: #1f6feb; color: #fff;
+    border: none; min-height: 3;
+}
+#open-btn:hover { background: #388bfd; }
 #session-list { height: 1fr; background: #0d1117; }
 
 SessionItem {
@@ -348,7 +354,8 @@ class SessionManager(App):
         ("n", "new_session", "New"),
         ("d", "delete_session", "Delete"),
         ("p", "toggle_pin", "Pin"),
-        ("enter", "resume_session", "Resume"),
+        ("o", "resume_session", "Open"),
+        ("enter", "resume_session", "Open"),
         ("r", "refresh", "Refresh"),
         ("escape", "cancel", "Back"),
         ("q", "quit_app", "Quit"),
@@ -361,6 +368,7 @@ class SessionManager(App):
         with Horizontal(id="layout"):
             with Vertical(id="left-panel"):
                 yield Button("+ New Session", id="new-btn", variant="default")
+                yield Button("Open Selected", id="open-btn", variant="primary")
                 yield ListView(id="session-list")
             with Vertical(id="right-panel"):
                 yield Label("Select a session to preview", id="preview-label")
@@ -447,13 +455,13 @@ class SessionManager(App):
                 paths_displayed = True
 
         if paths_displayed:
-            preview.write("[dim]--- messages ---[/]")
+            preview.write("[dim]---------------------------------------[/]")
 
         # Show "open" hint at the bottom
         preview.write("")
-        preview.write("[dim]──────────────────────────────────────[/]")
-        preview.write("[bold]Press Enter to open this session[/]")
-        preview.write("[dim]or N for new session, Q to quit[/]")
+        preview.write("[dim]---------------------------------------[/]")
+        preview.write("[b]Press O or Enter to open this session[/]")
+        preview.write("[dim]N=new  D=delete  P=pin  O=open  Q=quit[/]")
 
         for m in msgs[:30]:
             role_label = "You" if m["role"] == "user" else "DeepSeek"
@@ -539,14 +547,28 @@ class SessionManager(App):
 
     @on(ListView.Selected)
     def on_selected(self, event: ListView.Selected) -> None:
+        """Selected a session. Show preview AND prepare for resume."""
         item = event.item
         if isinstance(item, SessionItem):
             self.selected_sid = item.sid
             self.show_preview(item.sid)
+            # Auto-resume: if already selected and Enter pressed again
+            # This handles the case where Enter was pressed
+            if not hasattr(self, '_just_selected'):
+                self._just_selected = item.sid
+            elif self._just_selected == item.sid:
+                # Already showing preview, now resume
+                self.action_resume_session()
+            else:
+                self._just_selected = item.sid
 
     @on(Button.Pressed, "#new-btn")
     def on_new_click(self) -> None:
         self.action_new_session()
+
+    @on(Button.Pressed, "#open-btn")
+    def on_open_click(self) -> None:
+        self.action_resume_session()
 
 
 # ══════════════════════════════════════════════════════════════════
