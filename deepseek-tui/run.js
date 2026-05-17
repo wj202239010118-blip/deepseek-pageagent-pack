@@ -250,9 +250,12 @@ function startVoiceInput() {
   log("[sidecar] Starting voice input listener...");
   try {
     const proc = spawn(pythonCmd, ["-X", "utf8", VOICE_INPUT], {
-      detached: true, windowsHide: true, stdio: "ignore",
+      windowsHide: true, stdio: "pipe",
     });
-    proc.unref();
+    // Log any output for debugging
+    proc.stdout.on("data", (d) => log("[voice-input] " + d.toString().trim()));
+    proc.stderr.on("data", (d) => log("[voice-input:err] " + d.toString().trim()));
+    proc.on("exit", (code) => log("[sidecar] voice input exited: " + code));
     registerSidecar(proc, "voice-input");
   } catch (e) {
     log("[sidecar] voice input error: " + e.message);
@@ -518,7 +521,6 @@ async function run(binaryName) {
       try {
         const result = spawnSync(tuiBinary, dlArgs, {
           stdio: "inherit",
-          shell: true,
           env: { ...process.env, DEEPSEEK_TUI_NPM_WRAPPER: "1" },
         });
         console.log("TUI exited (code=" + (result ? result.status : "?") + "). Back to session manager.");
