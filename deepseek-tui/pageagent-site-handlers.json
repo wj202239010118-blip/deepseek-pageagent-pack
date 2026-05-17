@@ -1,0 +1,279 @@
+{
+  "_description": "Page Agent site handlers — adapted from Qshot siteHandlers.json for Page Agent MCP browser tools",
+  "_usage": "Load this file via rlm_open or reference as static knowledge for multi-AI search workflows",
+  "_version": "1.0",
+  "_source": "https://github.com/30bewater/Qshot",
+
+  "ai_sites": [
+    {
+      "id": "chatgpt",
+      "name": "ChatGPT",
+      "url": "https://chatgpt.com/",
+      "login_required": true,
+      "dom_hints": {
+        "input_selectors": ["#prompt-textarea", "div[contenteditable='true']", "textarea"],
+        "submit_selectors": [
+          "button[data-testid='send-button']",
+          "button[aria-label*='Send']",
+          "button[aria-label*='Submit']",
+          "button[aria-label*='发送']"
+        ]
+      },
+      "page_agent_sequence": [
+        {"tool": "browser_open_tab", "args": {"url": "https://chatgpt.com/"}},
+        {"tool": "browser_get_map", "note": "Locate input index and send button index"},
+        {"tool": "browser_type", "note": "Type query into the contenteditable div or textarea"},
+        {"tool": "browser_click", "note": "Click send button"},
+        {"tool": "wait", "note": "6-15 seconds for response, cold start may need 20s"}
+      ],
+      "quirks": "Cold start hydration is slow; submit button may be aria-disabled briefly. Use sendKeys Enter as fallback."
+    },
+    {
+      "id": "claude",
+      "name": "Claude",
+      "url": "https://claude.ai/",
+      "login_required": true,
+      "dom_hints": {
+        "input_selectors": ["div[contenteditable='true'].ProseMirror", "div[contenteditable='true']"],
+        "submit_selectors": [
+          "button[aria-label*='Send']",
+          "button[aria-label*='Submit']",
+          "button[type='submit']"
+        ]
+      },
+      "page_agent_sequence": [
+        {"tool": "browser_open_tab", "args": {"url": "https://claude.ai/"}},
+        {"tool": "browser_get_map", "note": "Locate ProseMirror div and send button"},
+        {"tool": "browser_type", "note": "Type query into contenteditable div"},
+        {"tool": "browser_click", "note": "Click send button"}
+      ],
+      "quirks": "ProseMirror editor needs contenteditable div. Response may take 10-30 seconds."
+    },
+    {
+      "id": "gemini",
+      "name": "Gemini",
+      "url": "https://gemini.google.com/",
+      "login_required": true,
+      "dom_hints": {
+        "input_selectors": ["textarea", "div[contenteditable='true']", "input[type='text']"],
+        "submit_selectors": [
+          "button[aria-label*='Send']",
+          "button[aria-label*='Submit']",
+          "button[data-testid*='send']"
+        ]
+      },
+      "page_agent_sequence": [
+        {"tool": "browser_open_tab", "args": {"url": "https://gemini.google.com/"}},
+        {"tool": "browser_get_map", "note": "Locate textarea and send button"},
+        {"tool": "browser_type", "note": "Type query into textarea"},
+        {"tool": "browser_click", "note": "Click send button or press Enter"}
+      ],
+      "quirks": "Heavy SPA, cold start ~20s. Response streaming is fast once loaded."
+    },
+    {
+      "id": "deepseek",
+      "name": "DeepSeek Chat",
+      "url": "https://chat.deepseek.com/",
+      "login_required": false,
+      "dom_hints": {
+        "input_selectors": ["textarea", "div[contenteditable='true']"],
+        "submit_selectors": [
+          "button[data-testid*='send']",
+          "button[aria-label*='发送']",
+          "button[aria-label*='Send']"
+        ]
+      },
+      "page_agent_sequence": [
+        {"tool": "browser_open_tab", "args": {"url": "https://chat.deepseek.com/"}},
+        {"tool": "browser_get_map", "note": "Locate textarea and send button"},
+        {"tool": "browser_type", "note": "Type query into textarea"},
+        {"tool": "browser_click", "note": "Click send button or press Enter"}
+      ],
+      "quirks": "Heavy SPA, cold start ~20s. No login needed for basic use."
+    },
+    {
+      "id": "kimi",
+      "name": "Kimi",
+      "url": "https://kimi.moonshot.cn/",
+      "login_required": true,
+      "dom_hints": {
+        "input_selectors": ["textarea", "div[contenteditable='true']", "input[type='text']"],
+        "submit_selectors": [
+          "button[aria-label*='发送']",
+          "button[aria-label*='Send']",
+          "button[type='submit']"
+        ]
+      },
+      "page_agent_sequence": [
+        {"tool": "browser_open_tab", "args": {"url": "https://kimi.moonshot.cn/"}},
+        {"tool": "browser_get_map", "note": "Locate textarea and send button"},
+        {"tool": "browser_type", "note": "Type query into textarea"},
+        {"tool": "browser_click", "note": "Click send button"}
+      ],
+      "quirks": "Heavy SPA, cold start ~20s. Chinese-language optimized."
+    },
+    {
+      "id": "grok",
+      "name": "Grok",
+      "url": "https://grok.com/",
+      "login_required": true,
+      "dom_hints": {
+        "input_selectors": ["div[contenteditable='true']", "textarea"],
+        "submit_selectors": [
+          "button[data-testid*='send']",
+          "button[data-testid*='submit']",
+          "button[aria-label*='Submit']",
+          "button[aria-label*='Send']"
+        ]
+      },
+      "page_agent_sequence": [
+        {"tool": "browser_open_tab", "args": {"url": "https://grok.com/"}},
+        {"tool": "browser_get_map", "note": "Locate contenteditable div and send button"},
+        {"tool": "browser_type", "note": "Type query into contenteditable div"},
+        {"tool": "browser_click", "note": "Click send button"}
+      ],
+      "quirks": "X.com login required. Contenteditable div based input."
+    },
+    {
+      "id": "doubao",
+      "name": "豆包",
+      "url": "https://www.doubao.com/chat/",
+      "login_required": true,
+      "dom_hints": {
+        "input_selectors": ["textarea", "div[contenteditable='true']", "input[type='text']"],
+        "submit_selectors": [
+          "button[aria-label*='发送']",
+          "button[aria-label*='Send']",
+          "button[type='submit']"
+        ]
+      },
+      "page_agent_sequence": [
+        {"tool": "browser_open_tab", "args": {"url": "https://www.doubao.com/chat/"}},
+        {"tool": "browser_get_map", "note": "Locate textarea and send button"},
+        {"tool": "browser_type", "note": "Type query into textarea"},
+        {"tool": "browser_click", "note": "Click send button"}
+      ],
+      "quirks": "ByteDance product. Chinese-language optimized."
+    },
+    {
+      "id": "qwen",
+      "name": "通义千问",
+      "url": "https://tongyi.aliyun.com/",
+      "login_required": true,
+      "dom_hints": {
+        "input_selectors": ["textarea", "div[contenteditable='true']", "input[type='text']"],
+        "submit_selectors": [
+          "button[aria-label*='发送']",
+          "button[aria-label*='Send']",
+          "button[type='submit']"
+        ]
+      },
+      "page_agent_sequence": [
+        {"tool": "browser_open_tab", "args": {"url": "https://tongyi.aliyun.com/"}},
+        {"tool": "browser_get_map", "note": "Locate textarea and send button"},
+        {"tool": "browser_type", "note": "Type query into textarea"},
+        {"tool": "browser_click", "note": "Click send button"}
+      ],
+      "quirks": "Alibaba product. May redirect to qianwen.aliyun.com."
+    },
+    {
+      "id": "yuanbao",
+      "name": "元宝",
+      "url": "https://yuanbao.tencent.com/",
+      "login_required": true,
+      "dom_hints": {
+        "input_selectors": ["textarea", "div[contenteditable='true']", "input[type='text']"],
+        "submit_selectors": [
+          "button[aria-label*='发送']",
+          "button[aria-label*='Send']",
+          "button[type='submit']"
+        ]
+      },
+      "page_agent_sequence": [
+        {"tool": "browser_open_tab", "args": {"url": "https://yuanbao.tencent.com/"}},
+        {"tool": "browser_get_map", "note": "Locate textarea and send button"},
+        {"tool": "browser_type", "note": "Type query into textarea"},
+        {"tool": "browser_click", "note": "Click send button"}
+      ],
+      "quirks": "Tencent product. Hybrid model backend."
+    },
+    {
+      "id": "metaso",
+      "name": "秘塔",
+      "url": "https://metaso.cn/",
+      "login_required": false,
+      "dom_hints": {
+        "input_selectors": ["textarea", "input[type='text']", "input[type='search']"],
+        "submit_selectors": [
+          "button[aria-label*='搜索']",
+          "button[aria-label*='Search']",
+          "button[type='submit']"
+        ]
+      },
+      "page_agent_sequence": [
+        {"tool": "browser_open_tab", "args": {"url": "https://metaso.cn/"}},
+        {"tool": "browser_get_map", "note": "Locate search input and button"},
+        {"tool": "browser_type", "note": "Type query into search input"},
+        {"tool": "browser_click", "note": "Click search button or press Enter"}
+      ],
+      "quirks": "Search-engine-style AI. RAG-based, good for factual queries."
+    },
+    {
+      "id": "perplexity",
+      "name": "Perplexity",
+      "url": "https://www.perplexity.ai/",
+      "login_required": false,
+      "dom_hints": {
+        "input_selectors": ["textarea", "input[type='text']", "input[placeholder*='Ask']"],
+        "submit_selectors": [
+          "button[aria-label*='Submit']",
+          "button[type='submit']"
+        ]
+      },
+      "page_agent_sequence": [
+        {"tool": "browser_open_tab", "args": {"url": "https://www.perplexity.ai/"}},
+        {"tool": "browser_get_map", "note": "Locate search textarea and submit button"},
+        {"tool": "browser_type", "note": "Type query into textarea"},
+        {"tool": "browser_click", "note": "Click submit or press Enter"}
+      ],
+      "quirks": "Search-first AI with citations. Free tier has limited Pro searches/day."
+    }
+  ],
+
+  "site_groups": {
+    "overseas": ["chatgpt", "claude", "gemini", "grok", "perplexity"],
+    "domestic": ["deepseek", "kimi", "doubao", "qwen", "yuanbao", "metaso"],
+    "all_ai": ["chatgpt", "claude", "gemini", "deepseek", "kimi", "grok", "doubao", "qwen", "yuanbao", "metaso", "perplexity"],
+    "fast_compare": ["chatgpt", "claude", "gemini", "deepseek"],
+    "chinese_focused": ["deepseek", "kimi", "doubao", "qwen", "yuanbao"]
+  },
+
+  "multi_round_template": {
+    "_description": "Template for multi-round deep deliberation across AI sites",
+    "rounds": [
+      {
+        "round": 1,
+        "name": "Seed",
+        "action": "Send the core question to ALL target AIs simultaneously",
+        "collect": "Gather all responses, extract key claims and approaches"
+      },
+      {
+        "round": 2,
+        "name": "Probe",
+        "action": "For EACH AI: craft a follow-up question based on their specific response. Challenge assumptions, ask for concrete examples, or request deeper analysis",
+        "collect": "Gather deepened responses from each AI"
+      },
+      {
+        "round": 3,
+        "name": "Cross-Examine",
+        "action": "Send AI-A's Round 2 response to AI-B, asking: 'Another AI suggested this approach. Do you agree? What would you add or challenge?' Repeat cross-wise for top 3-4 AIs",
+        "collect": "Gather cross-examination responses, noting agreements and rebuttals"
+      },
+      {
+        "round": "final",
+        "name": "Synthesize",
+        "action": "Compile all responses from all rounds. Identify: 1) Consensus points, 2) Unique insights, 3) Key disagreements and reasoning. Present unified recommendation with confidence levels and trade-offs."
+      }
+    ]
+  }
+}

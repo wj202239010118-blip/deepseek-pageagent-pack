@@ -1,0 +1,21 @@
+{
+    "_comment": "飞书截图哨兵 — 用户配置文件",
+    "save_dir": "feishu_uploads",
+    "file_prefix": "cap",
+    "max_files": 20,
+    "timeout_seconds": 20.0,
+    "poll_interval_seconds": 0.3,
+    "image_format": "PNG",
+    "image_quality": 85,
+    "notification": true,
+    "log_level": "INFO",
+    "log_file": "sentinel.log",
+    "log_max_bytes": 1048576,
+    "log_backup_count": 3,
+    "hotkeys": {
+        "ai_screenshot": ["ctrl", "shift", "x"],
+        "cancel": "esc"
+    },
+    "tray_icon": true,
+    "simulate_delay": 0.35
+}

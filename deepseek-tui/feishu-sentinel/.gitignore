@@ -1,0 +1,6 @@
+feishu_uploads/*.png
+feishu_uploads/*.jpg
+*.log
+__pycache__/
+*.pyc
+.venv/

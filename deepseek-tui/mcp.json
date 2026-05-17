@@ -1,0 +1,37 @@
+{
+  "servers": {
+    "pageagent": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\86133\\deepseek-pageagent-pack\\page-agent\\packages\\mcp\\src\\index.js",
+        "--name", "terminal-1"
+      ],
+      "env": {},
+      "disabled": false
+    },
+    "pageagent-2": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\86133\\deepseek-pageagent-pack\\page-agent\\packages\\mcp\\src\\index.js",
+        "--port", "38402",
+        "--name", "terminal-2"
+      ],
+      "env": {},
+      "disabled": true
+    },
+    "vision": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\86133\\deepseek-pageagent-pack\\mcp-servers\\vision-mcp-server\\dist\\index.js"
+      ],
+      "env": {
+        "VISION_BASE_URL": "https://api.deepseek.com/beta/chat/completions",
+        "VISION_MODEL": "deepseek-v4-pro",
+        "VISION_API_KEY": "sk-55c1dbef3db64de5ad410dd1ed1d64ce",
+        "VISION_MAX_TOKENS": "4096",
+        "VISION_TEMPERATURE": "0.7"
+      },
+      "disabled": false
+    }
+  }
+}
